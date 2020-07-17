@@ -16,6 +16,9 @@ var UIController = (function () {
     //The main input fields are interest rate, loan amount, and amortization terms
     var DOMstrings = {
         inputBtn: '.add__btn',
+        inputRate: '.add__interest_rate',
+        inputAmort: '.add__amort_period',
+        inputPayFreq: '.add__payment_freq',
         inputDebt: '.add__debt_value',
         inputPropValue: '.add__property_value',
         calcResults: '.LTV-Calc-Results'
@@ -25,9 +28,9 @@ var UIController = (function () {
         getinput: function () {
             return {
                 //Convert from string with commas to number
-                mtgValue: (parseFloat(document.querySelector(DOMstrings.inputDebt).value.replace(/,/g, ''))  || 0),
+                mtgValue: (parseFloat(document.querySelector(DOMstrings.inputDebt).value.replace(/(?!\.)\D/g, ''))  || 0),
                 
-                propValue: (parseFloat(document.querySelector(DOMstrings.inputPropValue).value.replace(/,/g, '')) || 0)
+                propValue: (parseFloat(document.querySelector(DOMstrings.inputRate).value.replace(/(?!\.)\D/g, '')) || 0)
             };
             
         },
@@ -114,10 +117,10 @@ var controller = (function (budgetCtrl, UICtrl) {
             }
         });
         //Format number when input field loses focus, adapted from SO code, so nice and DRY!
-        [document.querySelector(DOM.inputDebt), document.querySelector(DOM.inputPropValue)].forEach(item => {
+        [document.querySelector(DOM.inputDebt), document.querySelector(DOM.inputRate)].forEach(item => {
             item.addEventListener('focusout', event => {
-              item.value = parseInt(item.value.replace(/\D/g,''),10).toLocaleString();
-              if (isNaN(parseInt(item.value), 10)) {item.value="";}
+              item.value = parseFloat(item.value.replace(/(?!\.)\D/g,'')).toLocaleString();
+              if (isNaN(parseFloat(item.value))) {item.value="";}
             })
           })
     }

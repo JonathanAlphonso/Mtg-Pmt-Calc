@@ -278,14 +278,16 @@ h2 {
 
 /* New LTV Calc Styles */
 .add__debt_value,
-.add__property_value {
+.add__interest_rate,
+.add__amort_period,
+.add__payment_freq {
     border: 1px solid #e7e7e7;
     background-color: #fff;
     color: inherit;
     font-family: inherit;
     font-size: 14px;
     padding: 12px 45px;
-    margin-right: 30px;
+    
     border-radius: 5px;
     transition: border 0.3s;
     

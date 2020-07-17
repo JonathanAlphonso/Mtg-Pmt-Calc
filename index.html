@@ -21,14 +21,14 @@
 
 
 
-    <title>Loan-to-Value Ratio Calculator</title>
+    <title>Mortgage Payment Calculator</title>
 </head>
 
 <body>
 
     <div class="container">
-        <h1>Loan-to-Value Ratio Calculator</h1>
-        <br/>
+        <h1>Mortgage Payment Calculator</h1>
+        <br />
         <div class="accordion">
             <div class="card card-default">
                 <div class="card-header">
@@ -40,35 +40,44 @@
                 </div>
                 <div id="collapse0One" class="collapse show" data-parent="#accordion">
                     <div class="card-body">
-                        <p>A Loan-to-Value ratio for a property is equal to all mortgages on a property divided by the appraisal value of the property.
-                            If you own a home worth $1,000,000 and get a new first mortgage for $750,000 then your LTV ratio is 75% (i.e., 750,000/1,000,000) </p>
-                        <p>Most banks and other A-Tier Lenders can loan up to 95% LTV provided that the borrower has a good income and credit score. 
+                        <p>A Loan-to-Value ratio for a property is equal to all mortgages on a property divided by the
+                            appraisal value of the property.
+                            If you own a home worth $1,000,000 and get a new first mortgage for $750,000 then your LTV
+                            ratio is 75% (i.e., 750,000/1,000,000) </p>
+                        <p>Most banks and other A-Tier Lenders can loan up to 95% LTV provided that the borrower has a
+                            good income and credit score.
                             Most non-bank lenders can lend up to 75% LTV but can overlook income and credit issues.</p>
                         <p>
 
-
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">$</span>
+                                </div>
+                                <input type="text" class="add__debt_value form-control" aria-label="Amount"
+                                    placeholder="Total of Mortgage Debts">
+                            </div>
+    
 
                         <div class="input-group mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">$</span>
-                            </div>
-                            <input type="text" class="add__debt_value form-control" aria-label="Amount"
-                                placeholder="Total of Mortgage Debts">
-                            <div class="input-group-append">
-
-                            </div>
+                            <input type="text" class="add__interest_rate form-control" aria-label="Amount"
+                                placeholder="Mortgage Interest Rate">
+                                <div class="input-group-append">
+                                    <span class="input-group-text">%</span>
+                                  </div>
                         </div>
 
+
                         <div class="input-group mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text">$</span>
-                            </div>
-                            <input type="text" class="add__property_value form-control" aria-label="Amount"
+                             <input type="text" class="add__amort_period form-control" aria-label="Amount"
                                 placeholder="Property Value">
-                            <div class="input-group-append">
-
-                            </div>
                         </div>
+
+                        <div class="input-group mb-3">
+                           
+                            <input type="text" class="add__payment_freq form-control" aria-label="Amount"
+                                placeholder="Property Value">
+                        </div>
+
 
 
 
