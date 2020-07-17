@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:100,300,400,600" rel="stylesheet" type="text/css">
+    <link href="http://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css" rel="stylesheet" type="text/css">
+    <link type="text/css" rel="stylesheet" href="style.css">
+
+    <link type="text/css" rel="stylesheet"
+        href="https://mortgagebrokerstore.com/wp-content/themes/mortgagebrokerstore/css/custom-style.css">
+    <link type="text/css" rel="stylesheet"
+        href="https://mortgagebrokerstore.com/wp-content/themes/mortgagebrokerstore/css/theme-elements.css">
+    <link type="text/css" rel="stylesheet"
+        href="https://mortgagebrokerstore.com/wp-content/themes/mortgagebrokerstore/css/theme.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <!--Chart JS CSS CDN Import-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.css">
+
+
+
+    <title>Loan-to-Value Ratio Calculator</title>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Loan-to-Value Ratio Calculator</h1>
+        <br/>
+        <div class="accordion">
+            <div class="card card-default">
+                <div class="card-header">
+                    <h4 class="card-title m-0">
+                        <a class="accordion">
+                            What is a Loan-to-Value Ratio?
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapse0One" class="collapse show" data-parent="#accordion">
+                    <div class="card-body">
+                        <p>A Loan-to-Value ratio for a property is equal to all mortgages on a property divided by the appraisal value of the property.
+                            If you own a home worth $1,000,000 and get a new first mortgage for $750,000 then your LTV ratio is 75% (i.e., 750,000/1,000,000) </p>
+                        <p>Most banks and other A-Tier Lenders can loan up to 95% LTV provided that the borrower has a good income and credit score. 
+                            Most non-bank lenders can lend up to 75% LTV but can overlook income and credit issues.</p>
+                        <p>
+
+
+
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">$</span>
+                            </div>
+                            <input type="text" class="add__debt_value form-control" aria-label="Amount"
+                                placeholder="Total of Mortgage Debts">
+                            <div class="input-group-append">
+
+                            </div>
+                        </div>
+
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">$</span>
+                            </div>
+                            <input type="text" class="add__property_value form-control" aria-label="Amount"
+                                placeholder="Property Value">
+                            <div class="input-group-append">
+
+                            </div>
+                        </div>
+
+
+
+                        </p>
+                        <div style="text-align: center; margin-bottom:10px">
+                            <button class="btn btn-primary mr-2 add__btn">Calculate Your Loan to Value Ratio</button>
+                            <p class="LTV-Calc-Results">
+                                <!-- JS script in insert code for results here -->
+                            </p>
+                        </div>
+                        <canvas id="myChart" style="display: none;"></canvas>
+
+
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+    </div>
+
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.bundle.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
