@@ -13,7 +13,7 @@ var budgetController = (function () {
 
 // UI Controller
 var UIController = (function () {
-    //The main input fields are interest rate, loan amount, and amortization terms fvxgfxdg
+    //The main input fields are interest rate, loan amount, and amortization terms
     var DOMstrings = {
         inputBtn: '.add__btn',
         inputDebt: '.add__debt_value',
