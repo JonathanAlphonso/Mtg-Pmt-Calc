@@ -1,4 +1,4 @@
-//Budget Controller
+//Business Logic Controller
 var budgetController = (function () {
     var mortgageDebt;
     var propertyValue;
@@ -7,6 +7,34 @@ var budgetController = (function () {
         ltvRatio: function (mtgValue, propValue) {
             var ltv = Math.round(mtgValue / propValue * 100);
             return ltv;
+        },
+
+        PMT: function (ir, np, pv, fv, type) {
+            /*
+            Taken from the kindly Stack Overflow user: Vault
+             * ir   - interest rate per month
+             * np   - number of periods (months)
+             * pv   - present value
+             * fv   - future value
+             * type - when the payments are due:
+             *        0: end of the period, e.g. end of month (default)
+             *        1: beginning of period
+             */
+            var pmt, pvif;
+        
+            fv || (fv = 0);
+            type || (type = 0);
+        
+            if (ir === 0)
+                return -(pv + fv)/np;
+        
+            pvif = Math.pow(1 + ir, np);
+            pmt = - ir * pv * (pvif + fv) / (pvif - 1);
+        
+            if (type === 1)
+                pmt /= (1 + ir);
+        
+            return pmt;
         }
     };
 })();
@@ -130,6 +158,7 @@ var controller = (function (budgetCtrl, UICtrl) {
         //1. Get the field input data
         input = UICtrl.getinput();
         newItem = budgetCtrl.ltvRatio(input.mtgValue, input.propValue);
+        console.log(-budgetCtrl.PMT(0.004531682 , 25*12 , 135000 , 0 , 0).toFixed(2));
         //3. Add the item to the UI
         UICtrl.addLtv(newItem);
         //Add the cool chart js chart
@@ -139,6 +168,7 @@ var controller = (function (budgetCtrl, UICtrl) {
     return {
         init: function () {
             setupEventListeners();
+            
         }
     }
 })(budgetController, UIController);
