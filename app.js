@@ -37,6 +37,10 @@ var budgetController = (function () {
             return pmt;
         },
 
+        interestOnlyPmt: function (ir, np, pv){
+            return (pv*ir* 0.01/np).toFixed(2);
+        },
+
         ratePerPayment: function (ir, compound_period, periods_per_year) {
             return (((1 + ir * 0.01 / compound_period) ** (compound_period / periods_per_year)) - 1);
         }
@@ -87,16 +91,16 @@ var UIController = (function () {
             }
             el.parentNode.replaceChild(newEl, el);
         },
-        addPmt: function (ltv) {
+        addPmt: function (pmt) {
             var html, newHtml, element;
             element = DOMstrings.calcResults;
-            html = `Your Loan-to-Value ratio is ${ltv}%`;
+            html = `Your Loan-to-Value ratio is $ ${pmt}`;
             var el = document.querySelector(element);
             var newEl = document.createElement('p');
-            if (!isNaN(ltv) && isFinite(ltv) && ltv > 0 && ltv < 101) {
+            if (!isNaN(pmt) && isFinite(pmt) && pmt > 0) {
                 newEl.setAttribute('class', 'LTV-Calc-Results flip-in-hor-bottom');
                 document.querySelector('#myChart').setAttribute('style', 'display:flex;')
-                newEl.innerHTML = `Your Loan-to-Value ratio is <strong> ${ltv}%</strong>`;
+                newEl.innerHTML = `Your Payment is <strong>$ ${pmt}</strong>`;
             }
             else {
                 newEl.setAttribute('class', 'LTV-Calc-Results');
@@ -186,18 +190,24 @@ var controller = (function (budgetCtrl, UICtrl) {
         input = UICtrl.getinput();
         newItem = budgetCtrl.ltvRatio(input.mtgValue, input.propValue);
         console.log(-budgetCtrl.PMT(0.004531682, 25 * 12, 135000, 0, 0).toFixed(2));
-        console.log(input.interestRate, input.amortPeriod * 12, input.mtgValue);
+        console.log(input.interestRate, input.amortPeriod * 12, input.mtgValue, input.payFreq);
         console.log(((1 + input.interestRate * 0.01 / 2) ** (2 / 12)) - 1);
+        if (input.amortPeriod>0){
         newItem = -budgetCtrl.PMT(
-            ((1 + input.interestRate * 0.01 / 2) ** (2 / 12)) - 1,
-            input.amortPeriod * 12,
+            ((1 + input.interestRate * 0.01 / 2) ** (2 / input.payFreq)) - 1,
+            input.amortPeriod * input.payFreq,
             input.mtgValue,
             0, 0).toFixed(2);
+        }
+        else {
+            newItem = budgetCtrl.interestOnlyPmt(input.interestRate, input.payFreq, input.mtgValue);
+        }
         console.log(newItem);
         //3. Add the item to the UI
-        UICtrl.addLtv(newItem);
+        //UICtrl.addLtv(newItem);
+        UICtrl.addPmt(newItem);
         //Add the cool chart js chart
-        UICtrl.addChart(newItem);
+        //UICtrl.addChart(newItem);
     };
 
     return {
