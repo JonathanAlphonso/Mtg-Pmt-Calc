@@ -21,20 +21,24 @@ var budgetController = (function () {
              *        1: beginning of period
              */
             var pmt, pvif;
-        
+
             fv || (fv = 0);
             type || (type = 0);
-        
+
             if (ir === 0)
-                return -(pv + fv)/np;
-        
+                return -(pv + fv) / np;
+
             pvif = Math.pow(1 + ir, np);
             pmt = - ir * pv * (pvif + fv) / (pvif - 1);
-        
+
             if (type === 1)
                 pmt /= (1 + ir);
-        
+
             return pmt;
+        },
+
+        ratePerPayment: function (ir, compound_period, periods_per_year) {
+            return (((1 + ir * 0.01 / compound_period) ** (compound_period / periods_per_year)) - 1);
         }
     };
 })();
@@ -56,11 +60,14 @@ var UIController = (function () {
         getinput: function () {
             return {
                 //Convert from string with commas to number
-                mtgValue: (parseFloat(document.querySelector(DOMstrings.inputDebt).value.replace(/(?!\.)\D/g, ''))  || 0),
-                
-                propValue: (parseFloat(document.querySelector(DOMstrings.inputRate).value.replace(/(?!\.)\D/g, '')) || 0)
+                mtgValue: (parseFloat(document.querySelector(DOMstrings.inputDebt).value.replace(/(?!\.)\D/g, '')) || 0),
+                interestRate: (parseFloat(document.querySelector(DOMstrings.inputRate).value.replace(/(?!\.)\D/g, '')) || 0),
+                amortPeriod: parseFloat(document.querySelector(DOMstrings.inputAmort).value),
+                payFreq: document.querySelector(DOMstrings.inputPayFreq).value
+
+
             };
-            
+
         },
         addLtv: function (ltv) {
             var html, newHtml, element;
@@ -80,6 +87,26 @@ var UIController = (function () {
             }
             el.parentNode.replaceChild(newEl, el);
         },
+        addPmt: function (ltv) {
+            var html, newHtml, element;
+            element = DOMstrings.calcResults;
+            html = `Your Loan-to-Value ratio is ${ltv}%`;
+            var el = document.querySelector(element);
+            var newEl = document.createElement('p');
+            if (!isNaN(ltv) && isFinite(ltv) && ltv > 0 && ltv < 101) {
+                newEl.setAttribute('class', 'LTV-Calc-Results flip-in-hor-bottom');
+                document.querySelector('#myChart').setAttribute('style', 'display:flex;')
+                newEl.innerHTML = `Your Loan-to-Value ratio is <strong> ${ltv}%</strong>`;
+            }
+            else {
+                newEl.setAttribute('class', 'LTV-Calc-Results');
+                document.querySelector('#myChart').setAttribute('style', 'display:none;')
+                newEl.innerHTML = 'Your numbers are not valid. Please check your inputs and try again.';
+            }
+            el.parentNode.replaceChild(newEl, el);
+        },
+
+
         getDOMstrings: function () {
             return DOMstrings;
         },
@@ -147,10 +174,10 @@ var controller = (function (budgetCtrl, UICtrl) {
         //Format number when input field loses focus, adapted from SO code, so nice and DRY!
         [document.querySelector(DOM.inputDebt), document.querySelector(DOM.inputRate)].forEach(item => {
             item.addEventListener('focusout', event => {
-              item.value = parseFloat(item.value.replace(/(?!\.)\D/g,'')).toLocaleString();
-              if (isNaN(parseFloat(item.value))) {item.value="";}
+                item.value = parseFloat(item.value.replace(/(?!\.)\D/g, '')).toLocaleString();
+                if (isNaN(parseFloat(item.value))) { item.value = ""; }
             })
-          })
+        })
     }
 
     var ctrlAddItem = function () {
@@ -158,7 +185,15 @@ var controller = (function (budgetCtrl, UICtrl) {
         //1. Get the field input data
         input = UICtrl.getinput();
         newItem = budgetCtrl.ltvRatio(input.mtgValue, input.propValue);
-        console.log(-budgetCtrl.PMT(0.004531682 , 25*12 , 135000 , 0 , 0).toFixed(2));
+        console.log(-budgetCtrl.PMT(0.004531682, 25 * 12, 135000, 0, 0).toFixed(2));
+        console.log(input.interestRate, input.amortPeriod * 12, input.mtgValue);
+        console.log(((1 + input.interestRate * 0.01 / 2) ** (2 / 12)) - 1);
+        newItem = -budgetCtrl.PMT(
+            ((1 + input.interestRate * 0.01 / 2) ** (2 / 12)) - 1,
+            input.amortPeriod * 12,
+            input.mtgValue,
+            0, 0).toFixed(2);
+        console.log(newItem);
         //3. Add the item to the UI
         UICtrl.addLtv(newItem);
         //Add the cool chart js chart
@@ -168,7 +203,7 @@ var controller = (function (budgetCtrl, UICtrl) {
     return {
         init: function () {
             setupEventListeners();
-            
+
         }
     }
 })(budgetController, UIController);
