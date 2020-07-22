@@ -73,24 +73,6 @@ var UIController = (function () {
             };
 
         },
-        addLtv: function (ltv) {
-            var html, newHtml, element;
-            element = DOMstrings.calcResults;
-            html = `Your Loan-to-Value ratio is ${ltv}%`;
-            var el = document.querySelector(element);
-            var newEl = document.createElement('p');
-            if (!isNaN(ltv) && isFinite(ltv) && ltv > 0 && ltv < 101) {
-                newEl.setAttribute('class', 'LTV-Calc-Results flip-in-hor-bottom');
-                document.querySelector('#myChart').setAttribute('style', 'display:flex;')
-                newEl.innerHTML = `Your Loan-to-Value ratio is <strong> ${ltv}%</strong>`;
-            }
-            else {
-                newEl.setAttribute('class', 'LTV-Calc-Results');
-                document.querySelector('#myChart').setAttribute('style', 'display:none;')
-                newEl.innerHTML = 'Your numbers are not valid. Please check your inputs and try again.';
-            }
-            el.parentNode.replaceChild(newEl, el);
-        },
         addPmt: function (pmt) {
             var html, newHtml, element;
             element = DOMstrings.calcResults;
@@ -109,6 +91,18 @@ var UIController = (function () {
             }
             el.parentNode.replaceChild(newEl, el);
         },
+
+        /*
+        <table class="amortizationSchedule" ng-hide="scheduleView == 'term'" style="">
+								<tbody><tr>
+									<th class="ng-binding">#</th>
+									<th>Opening balance</th>
+									<th>Principal (P)</th>
+									<th>Interest (I)</th>
+									<th>Total P&amp;I </th>
+									<th>Closing balance</th>
+                                </tr>
+                                */
 
 
         getDOMstrings: function () {
@@ -194,7 +188,7 @@ var controller = (function (budgetCtrl, UICtrl) {
         console.log(((1 + input.interestRate * 0.01 / 2) ** (2 / 12)) - 1);
         if (input.amortPeriod>0){
         newItem = -budgetCtrl.PMT(
-            ((1 + input.interestRate * 0.01 / 2) ** (2 / input.payFreq)) - 1,
+            budgetCtrl.ratePerPayment(input.interestRate,2,input.payFreq), 
             input.amortPeriod * input.payFreq,
             input.mtgValue,
             0, 0).toFixed(2);
