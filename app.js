@@ -37,13 +37,46 @@ var budgetController = (function () {
             return pmt;
         },
 
-        interestOnlyPmt: function (ir, np, pv){
-            return (pv*ir* 0.01/np).toFixed(2);
+        //For mortgages where only interest is paid. Not amortized.
+        interestOnlyPmt: function (ir, np, pv) {
+            return (pv * ir * 0.01 / np).toFixed(2);
         },
 
         ratePerPayment: function (ir, compound_period, periods_per_year) {
             return (((1 + ir * 0.01 / compound_period) ** (compound_period / periods_per_year)) - 1);
+        },
+
+        populateAmortTable: function (pmt, amortPeriod, payFreq, loanAmt, ratePerPmt) {
+            console.log(pmt, amortPeriod, payFreq, loanAmt, ratePerPmt);
+            console.log(loanAmt*ratePerPmt);
+            var amortTable = {
+                id: [0],
+                pmt:[pmt.toFixed(2)],      
+                interest: [(loanAmt*ratePerPmt).toFixed(2)],
+                principal: [(pmt-loanAmt*ratePerPmt).toFixed(2)],
+                balance: [(loanAmt).toFixed(2)]
+            }
+            console.log(amortTable);
+            
+            for (var i = 1; i <= (amortPeriod*payFreq); i++) {
+                amortTable.id[i] = i;
+                amortTable.pmt[i] = pmt.toFixed(2);
+                amortTable.interest[i] = (amortTable.balance[(i-1)]*ratePerPmt).toFixed(2);
+                console.log(amortTable.balance[(i-1)]);   
+                amortTable.principal[i] = (pmt-amortTable.interest[i]).toFixed(2);
+                amortTable.balance[i] = (amortTable.balance[i-1]-amortTable.principal[i]).toFixed(2);
+                if(amortTable.balance[i]<0){
+                    amortTable.principal[i] = parseFloat(amortTable.principal[i])+parseFloat(amortTable.balance[i]);
+                    amortTable.balance[i]=0;
+                }
+                
+            }
+            //console.log(amortTable);
+            
+
+            return amortTable;
         }
+
     };
 })();
 
@@ -57,7 +90,8 @@ var UIController = (function () {
         inputPayFreq: '.add__payment_freq',
         inputDebt: '.add__debt_value',
         inputPropValue: '.add__property_value',
-        calcResults: '.LTV-Calc-Results'
+        calcResults: '.LTV-Calc-Results',
+        amortTable: '.Mortgage-Amort-Table'
     };
 
     return {
@@ -92,17 +126,47 @@ var UIController = (function () {
             el.parentNode.replaceChild(newEl, el);
         },
 
-        /*
-        <table class="amortizationSchedule" ng-hide="scheduleView == 'term'" style="">
-								<tbody><tr>
-									<th class="ng-binding">#</th>
-									<th>Opening balance</th>
-									<th>Principal (P)</th>
-									<th>Interest (I)</th>
-									<th>Total P&amp;I </th>
-									<th>Closing balance</th>
-                                </tr>
-                                */
+        addAmortTable: function (tableData) {
+            var html, newHtml, element;
+            element = DOMstrings.amortTable;
+            html = '';
+            var el = document.querySelector(element);
+            var newEl = document.createElement('p');
+            newEl.setAttribute('class', 'Mortgage-Amort-Table');
+            // document.querySelector('#myChart').setAttribute('style', 'display:none;')
+            html = `
+                <table class="amortizationSchedule">
+                    <thead>
+                        <tr>
+                            <th class="ng-binding">Payment #</th>
+                            <th>Payment</th>
+                            <th>Interest (I)</th>
+                            <th>Principal (P)</th>
+                            <th>Closing balance</th>
+                        </tr>
+                    </thead>
+                <tbody>
+                        `;
+            for (var i = 1; i <= (tableData.id.length-1); i++) {
+                html += `
+                        <tr>
+                            <td>${tableData.id[i]}</td>
+                            <td>${tableData.pmt[i]}</td> 
+                            <td>${tableData.interest[i]}</td>
+                            <td>${tableData.principal[i]}</td>
+                            <td>${tableData.balance[i]}</td>
+                        </tr>   
+                        `                  
+            }
+            html +=
+                `
+                </tbody>
+                </table>
+                `
+                newEl.innerHTML = html;
+            el.parentNode.replaceChild(newEl, el);
+
+        },
 
 
         getDOMstrings: function () {
@@ -179,19 +243,21 @@ var controller = (function (budgetCtrl, UICtrl) {
     }
 
     var ctrlAddItem = function () {
-        var input, newItem;
+        var input, newItem, ratePerPayment;
         //1. Get the field input data
         input = UICtrl.getinput();
         newItem = budgetCtrl.ltvRatio(input.mtgValue, input.propValue);
         console.log(-budgetCtrl.PMT(0.004531682, 25 * 12, 135000, 0, 0).toFixed(2));
         console.log(input.interestRate, input.amortPeriod * 12, input.mtgValue, input.payFreq);
         console.log(((1 + input.interestRate * 0.01 / 2) ** (2 / 12)) - 1);
-        if (input.amortPeriod>0){
-        newItem = -budgetCtrl.PMT(
-            budgetCtrl.ratePerPayment(input.interestRate,2,input.payFreq), 
-            input.amortPeriod * input.payFreq,
-            input.mtgValue,
-            0, 0).toFixed(2);
+        
+        if (input.amortPeriod > 0) {
+            ratePerPayment = budgetCtrl.ratePerPayment(input.interestRate, 2, input.payFreq);
+            newItem = -budgetCtrl.PMT(
+                ratePerPayment,
+                input.amortPeriod * input.payFreq,
+                input.mtgValue,
+                0, 0).toFixed(2);
         }
         else {
             newItem = budgetCtrl.interestOnlyPmt(input.interestRate, input.payFreq, input.mtgValue);
@@ -201,7 +267,10 @@ var controller = (function (budgetCtrl, UICtrl) {
         //UICtrl.addLtv(newItem);
         UICtrl.addPmt(newItem);
         //Add the cool chart js chart
-        //UICtrl.addChart(newItem);
+        UICtrl.addChart(newItem);
+        
+        tableData = budgetCtrl.populateAmortTable(newItem, input.amortPeriod, parseFloat(input.payFreq), input.mtgValue,ratePerPayment);
+        UICtrl.addAmortTable(tableData);
     };
 
     return {
