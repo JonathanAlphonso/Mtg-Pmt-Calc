@@ -132,10 +132,11 @@ var UIController = (function () {
             html = '';
             var el = document.querySelector(element);
             var newEl = document.createElement('p');
-            newEl.setAttribute('class', 'Mortgage-Amort-Table');
-            // document.querySelector('#myChart').setAttribute('style', 'display:none;')
+            newEl.setAttribute('class', 'Mortgage-Amort-Table table table-striped');
+          
+            
             html = `
-                <table class="amortizationSchedule">
+                <table class="amortizationSchedule" style="margin:auto">
                     <thead>
                         <tr>
                             <th class="ng-binding">Payment #</th>
@@ -267,7 +268,7 @@ var controller = (function (budgetCtrl, UICtrl) {
         //UICtrl.addLtv(newItem);
         UICtrl.addPmt(newItem);
         //Add the cool chart js chart
-        UICtrl.addChart(newItem);
+        //UICtrl.addChart(newItem);
         
         tableData = budgetCtrl.populateAmortTable(newItem, input.amortPeriod, parseFloat(input.payFreq), input.mtgValue,ratePerPayment);
         UICtrl.addAmortTable(tableData);
