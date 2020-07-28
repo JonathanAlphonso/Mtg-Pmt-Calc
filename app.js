@@ -70,9 +70,12 @@ var budgetController = (function () {
                     // amortTable.principal[i] = parseFloat(amortTable.principal[i])+parseFloat(amortTable.balance[i]);
                     // amortTable.pmt[i] = parseFloat(amortTable.principal[i])+parseFloat(amortTable.interest[i]);
                     // amortTable.balance[i]=0;
+                    totalPeriods = i;
+                    break;
                 }
                 
             }
+            
             amortTable.principal[totalPeriods] = parseFloat(amortTable.principal[totalPeriods])+parseFloat(amortTable.balance[totalPeriods]);
             amortTable.pmt[totalPeriods] = parseFloat(amortTable.principal[totalPeriods])+parseFloat(amortTable.interest[totalPeriods]);
             amortTable.balance[totalPeriods]=0;
@@ -282,14 +285,17 @@ var controller = (function (budgetCtrl, UICtrl) {
                 input.amortPeriod * 12,
                 input.mtgValue/2,
                 0, 0).toFixed(2);
+                ratePerPayment = budgetCtrl.ratePerPayment(input.interestRate, 2, input.payFreq);
         }
-        else if (input.rapidLabel && input.payFreq == 56 ) { //Rapid Weekly
-            ratePerPayment = budgetCtrl.ratePerPayment(input.interestRate, 2, input.payFreq);
+        else if (input.rapidLabel && input.payFreq == 52 ) { //Rapid Weekly
+            ratePerPayment = (((1+input.interestRate*0.01/2)**(2/12))-1)
+            console.log(ratePerPayment);
             newItem = -budgetCtrl.PMT(
                 ratePerPayment,
-                input.amortPeriod * input.payFreq,
-                input.mtgValue,
+                input.amortPeriod * 12,
+                input.mtgValue/4,
                 0, 0).toFixed(2);
+                ratePerPayment = budgetCtrl.ratePerPayment(input.interestRate, 2, input.payFreq);
         }
         else {
             newItem = budgetCtrl.interestOnlyPmt(input.interestRate, input.payFreq, input.mtgValue);
