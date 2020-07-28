@@ -101,15 +101,18 @@ var UIController = (function () {
 
     return {
         getinput: function () {
+            
             return {
                 //Convert from string with commas to number
                 mtgValue: (parseFloat(document.querySelector(DOMstrings.inputDebt).value.replace(/(?!\.)\D/g, ''))),
                 interestRate: (parseFloat(document.querySelector(DOMstrings.inputRate).value.replace(/(?!\.)\D/g, ''))),
                 amortPeriod: parseFloat(document.querySelector(DOMstrings.inputAmort).value),
-                payFreq: document.querySelector(DOMstrings.inputPayFreq).value
+                payFreq: document.querySelector(DOMstrings.inputPayFreq).value,
+                rapidLabel: document.querySelector(DOMstrings.inputPayFreq).options[document.querySelector(DOMstrings.inputPayFreq).selectedIndex].innerHTML.includes("Rapid")
 
 
             };
+           
 
         },
         addPmt: function (pmt) {
@@ -179,58 +182,57 @@ var UIController = (function () {
             return DOMstrings;
         },
 
-        addChart: function (numOfPayment,balance) {
-            var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-            var config = {
+        addChart: function (numOfPayment,balance,num) {
+          
+            var ctx = document.getElementById("myChart");
+
+            var lineChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-                    datasets: [{
-                        label: 'My First dataset',
-           
-                        data: [
-                           1,2,3,4,5
-                        ],
-                        fill: false,
-                    }]
+                  labels: [...num],
+                  datasets: [
+                    {
+                      label: "Mortgage Balance",
+                      data: [...balance],
+                      fill: true,
+                      borderColor: "#1e5398",
+                     
+                      backgroundColor: "#a9c6ea",
+                      pointBackgroundColor: "#a9c6ea",
+                      pointBorderColor: "#1e5398",
+                      pointHoverBackgroundColor: "#a9c6ea",
+                      pointHoverBorderColor: "#1e5398"
+                      
+                    }
+                  ]
                 },
+
                 options: {
                     responsive: true,
                     title: {
                         display: true,
-                        text: 'Chart.js Line Chart'
-                    },
-                    tooltips: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    hover: {
-                        mode: 'nearest',
-                        intersect: true
+                        text: 'Payment History'
                     },
                     scales: {
                         xAxes: [{
                             display: true,
                             scaleLabel: {
                                 display: true,
-                                labelString: 'Month'
+                                labelString: 'Number of Payments'
                             }
                         }],
                         yAxes: [{
                             display: true,
                             scaleLabel: {
                                 display: true,
-                                labelString: 'Value'
+                                labelString: 'Remaining Mortgage Principal'
                             }
                         }]
                     }
                 }
-            };
+                
 
-            var ctx = document.getElementById("myChart");
-
-            // And for a doughnut chart
-            var myDoughnutChart = new Chart(ctx, config);
+              });
         }
     };
 })();
@@ -258,12 +260,30 @@ var controller = (function (budgetCtrl, UICtrl) {
         var input, newItem, ratePerPayment;
         //1. Get the field input data
         input = UICtrl.getinput();
+        console.log(input.rapidLabel);
+        console.log(input.payFreq);
         newItem = budgetCtrl.ltvRatio(input.mtgValue, input.propValue);
-        console.log(-budgetCtrl.PMT(0.004531682, 25 * 12, 135000, 0, 0).toFixed(2));
-        console.log(input.interestRate, input.amortPeriod * 12, input.mtgValue, input.payFreq);
-        console.log(((1 + input.interestRate * 0.01 / 2) ** (2 / 12)) - 1);
         
-        if (input.amortPeriod > 0) {
+        
+        if (input.amortPeriod > 0 && !input.rapidLabel) {
+            ratePerPayment = budgetCtrl.ratePerPayment(input.interestRate, 2, input.payFreq);
+            newItem = -budgetCtrl.PMT(
+                ratePerPayment,
+                input.amortPeriod * input.payFreq,
+                input.mtgValue,
+                0, 0).toFixed(2);
+        }
+        else if (input.rapidLabel && input.payFreq == 26 ) { //Rapid Bi-Weekly
+            //ratePerPayment = //budgetCtrl.ratePerPayment(input.interestRate, 2, input.payFreq);
+            ratePerPayment = (((1+input.interestRate*0.01/2)**(2/12))-1)
+            console.log(ratePerPayment);
+            newItem = -budgetCtrl.PMT(
+                ratePerPayment,
+                input.amortPeriod * 12,
+                input.mtgValue/2,
+                0, 0).toFixed(2);
+        }
+        else if (input.rapidLabel && input.payFreq == 56 ) { //Rapid Weekly
             ratePerPayment = budgetCtrl.ratePerPayment(input.interestRate, 2, input.payFreq);
             newItem = -budgetCtrl.PMT(
                 ratePerPayment,
@@ -283,7 +303,7 @@ var controller = (function (budgetCtrl, UICtrl) {
         
         tableData = budgetCtrl.populateAmortTable(newItem, input.amortPeriod, parseFloat(input.payFreq), input.mtgValue,ratePerPayment);
         UICtrl.addAmortTable(tableData);
-        UICtrl.addChart(tableData.balance);
+        UICtrl.addChart(tableData.totalPeriods,tableData.balance,tableData.id);
     };
 
     return {
