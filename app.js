@@ -174,6 +174,19 @@ var UIController = (function () {
 
 
             html = `
+            <div class="accordion accordion-light" id="accordion">
+																		<div class="card card-default">
+							<div class="card-header">
+								<h4 class="card-title m-0">
+									<a class="accordion-toggle collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse0One" aria-expanded="false">
+									  Yearly Mortgage Amortization Table										
+									</a>
+								</h4>
+							</div>
+							<div id="collapse0One" class="collapse" data-parent="#accordion" style="">
+                                <div class="card-body">
+                                
+
                 <table class="amortizationSchedule" id="big_amortization_table" style="margin:auto">
                     <thead>
                         <tr>
@@ -202,6 +215,14 @@ var UIController = (function () {
                 `
                 </tbody>
                 </table>
+                </div>
+							</div>
+						</div>
+																		
+																		
+																		
+																		
+																	</div>
                 `
             newEl.innerHTML = html;
             el.parentNode.replaceChild(newEl, el);
@@ -249,7 +270,7 @@ var UIController = (function () {
                             display: true,
                             scaleLabel: {
                                 display: true,
-                                labelString: 'Number of Payments'
+                                labelString: 'Year Number'
                             }
                         }],
                         yAxes: [{
