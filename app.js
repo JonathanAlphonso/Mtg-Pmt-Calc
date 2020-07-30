@@ -1,14 +1,6 @@
 //Business Logic Controller
 var budgetController = (function () {
-    var mortgageDebt;
-    var propertyValue;
-
     return {
-        ltvRatio: function (mtgValue, propValue) {
-            var ltv = Math.round(mtgValue / propValue * 100);
-            return ltv;
-        },
-
         PMT: function (ir, np, pv, fv, type) {
             /*
             Taken from the kindly Stack Overflow user: Vault
@@ -47,41 +39,32 @@ var budgetController = (function () {
         },
 
         populateAmortTable: function (pmt, amortPeriod, payFreq, loanAmt, ratePerPmt) {
-           // console.log(pmt, amortPeriod, payFreq, loanAmt, ratePerPmt);
-           // console.log(loanAmt*ratePerPmt);
             var amortTable = {
                 id: [0],
-                pmt:[pmt.toFixed(2)],      
-                interest: [(loanAmt*ratePerPmt).toFixed(2)],
-                principal: [(pmt-loanAmt*ratePerPmt).toFixed(2)],
+                pmt: [pmt.toFixed(2)],
+                interest: [(loanAmt * ratePerPmt).toFixed(2)],
+                principal: [(pmt - loanAmt * ratePerPmt).toFixed(2)],
                 balance: [(loanAmt).toFixed(2)],
-                totalPeriods: [amortPeriod*payFreq]
+                totalPeriods: [amortPeriod * payFreq]
             }
-            //console.log(amortTable);
-            var totalPeriods = amortPeriod*payFreq;
+            var totalPeriods = amortPeriod * payFreq;
             for (var i = 1; i <= totalPeriods; i++) {
                 amortTable.id[i] = i;
                 amortTable.pmt[i] = pmt.toFixed(2);
-                amortTable.interest[i] = (amortTable.balance[(i-1)]*ratePerPmt).toFixed(2);
-                //console.log(amortTable.balance[(i-1)]);   
-                amortTable.principal[i] = (pmt-amortTable.interest[i]).toFixed(2);
-                amortTable.balance[i] = (amortTable.balance[i-1]-amortTable.principal[i]).toFixed(2);
-                if(amortTable.balance[i]<0){
-                    // amortTable.principal[i] = parseFloat(amortTable.principal[i])+parseFloat(amortTable.balance[i]);
-                    // amortTable.pmt[i] = parseFloat(amortTable.principal[i])+parseFloat(amortTable.interest[i]);
-                    // amortTable.balance[i]=0;
+                amortTable.interest[i] = (amortTable.balance[(i - 1)] * ratePerPmt).toFixed(2);
+                amortTable.principal[i] = (pmt - amortTable.interest[i]).toFixed(2);
+                amortTable.balance[i] = (amortTable.balance[i - 1] - amortTable.principal[i]).toFixed(2);
+                if (amortTable.balance[i] < 0) {
+                    // Rapid payments have an unpredictable number of total periods
                     totalPeriods = i;
                     break;
                 }
-                
-            }
-            
-            amortTable.principal[totalPeriods] = parseFloat(amortTable.principal[totalPeriods])+parseFloat(amortTable.balance[totalPeriods]);
-            amortTable.pmt[totalPeriods] = parseFloat(amortTable.principal[totalPeriods])+parseFloat(amortTable.interest[totalPeriods]);
-            amortTable.balance[totalPeriods]=0;
-            //console.log(amortTable);
-            
 
+            }
+            //Final payment is special, cannot pay past a balance of $0
+            amortTable.principal[totalPeriods] = parseFloat(amortTable.principal[totalPeriods]) + parseFloat(amortTable.balance[totalPeriods]);
+            amortTable.pmt[totalPeriods] = parseFloat(amortTable.principal[totalPeriods]) + parseFloat(amortTable.interest[totalPeriods]);
+            amortTable.balance[totalPeriods] = 0;
             return amortTable;
         }
 
@@ -90,7 +73,7 @@ var budgetController = (function () {
 
 // UI Controller
 var UIController = (function () {
-    //The main input fields are interest rate, loan amount, and amortization terms
+    //The main input fields are interest rate, loan amount, payment frequency and amortization
     var DOMstrings = {
         inputBtn: '.add__btn',
         inputRate: '.add__interest_rate',
@@ -104,18 +87,18 @@ var UIController = (function () {
 
     return {
         getinput: function () {
-            
+
             return {
                 //Convert from string with commas to number
                 mtgValue: (parseFloat(document.querySelector(DOMstrings.inputDebt).value.replace(/(?!\.)\D/g, ''))),
                 interestRate: (parseFloat(document.querySelector(DOMstrings.inputRate).value.replace(/(?!\.)\D/g, ''))),
                 amortPeriod: parseFloat(document.querySelector(DOMstrings.inputAmort).value),
                 payFreq: document.querySelector(DOMstrings.inputPayFreq).value,
+                //A bit long, but this will return a boolean to show if the payment is rapid or not
                 rapidLabel: document.querySelector(DOMstrings.inputPayFreq).options[document.querySelector(DOMstrings.inputPayFreq).selectedIndex].innerHTML.includes("Rapid")
 
-
             };
-           
+
 
         },
         addPmt: function (pmt) {
@@ -126,12 +109,24 @@ var UIController = (function () {
             var newEl = document.createElement('p');
             if (!isNaN(pmt) && isFinite(pmt) && pmt > 0) {
                 newEl.setAttribute('class', 'LTV-Calc-Results flip-in-hor-bottom');
-                document.querySelector('#myChart').setAttribute('style', 'display:flex;')
                 newEl.innerHTML = `Your Payment is <strong>$ ${pmt.toLocaleString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</strong>`;
+                //Check for interest only payments first
+                if (document.querySelector(DOMstrings.inputAmort).value != 0) {
+                    document.querySelector('#mortgageBalanceChart').setAttribute('style', 'display:flex;');
+                }
+                else {
+                    document.querySelector('#mortgageBalanceChart').setAttribute('style', 'display:none;');
+                    if (document.querySelector('#big_amortization_table')) {
+                        //Only hide table if it is on the page
+                        document.querySelector('#big_amortization_table').setAttribute('style', 'display:none;')
+                    }
+                }
+
+
             }
             else {
                 newEl.setAttribute('class', 'LTV-Calc-Results');
-                document.querySelector('#myChart').setAttribute('style', 'display:none;')
+                document.querySelector('#mortgageBalanceChart').setAttribute('style', 'display:none;')
                 newEl.innerHTML = 'Your numbers are not valid. Please check your inputs and try again.';
             }
             el.parentNode.replaceChild(newEl, el);
@@ -144,10 +139,10 @@ var UIController = (function () {
             var el = document.querySelector(element);
             var newEl = document.createElement('p');
             newEl.setAttribute('class', 'Mortgage-Amort-Table table table-striped');
-          
-            
+
+
             html = `
-                <table class="amortizationSchedule" style="margin:auto">
+                <table class="amortizationSchedule" id="big_amortization_table" style="margin:auto">
                     <thead>
                         <tr>
                             <th class="ng-binding">Payment #</th>
@@ -159,7 +154,7 @@ var UIController = (function () {
                     </thead>
                 <tbody>
                         `;
-            for (var i = 1; i <= (tableData.id.length-1); i++) {
+            for (var i = 1; i <= (tableData.id.length - 1); i++) {
                 html += `
                         <tr>
                             <td>${tableData.id[i]}</td>
@@ -168,14 +163,14 @@ var UIController = (function () {
                             <td>$${tableData.principal[i].toLocaleString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td>
                             <td>$${tableData.balance[i].toLocaleString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td>
                         </tr>   
-                        `                  
+                        `
             }
             html +=
                 `
                 </tbody>
                 </table>
                 `
-                newEl.innerHTML = html;
+            newEl.innerHTML = html;
             el.parentNode.replaceChild(newEl, el);
 
         },
@@ -185,29 +180,29 @@ var UIController = (function () {
             return DOMstrings;
         },
 
-        addChart: function (numOfPayment,balance,num) {
-          
-            var ctx = document.getElementById("myChart");
+        addChart: function (numOfPayment, balance, num) {
+
+            var ctx = document.getElementById("mortgageBalanceChart");
 
             var lineChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                  labels: [...num],
-                  datasets: [
-                    {
-                      label: "Mortgage Balance",
-                      data: [...balance],
-                      fill: true,
-                      borderColor: "#1e5398",
-                     
-                      backgroundColor: "#a9c6ea",
-                      pointBackgroundColor: "#a9c6ea",
-                      pointBorderColor: "#1e5398",
-                      pointHoverBackgroundColor: "#a9c6ea",
-                      pointHoverBorderColor: "#1e5398"
-                      
-                    }
-                  ]
+                    labels: [...num],
+                    datasets: [
+                        {
+                            label: "Mortgage Balance",
+                            data: [...balance],
+                            fill: true,
+                            borderColor: "#1e5398",
+
+                            backgroundColor: "#a9c6ea",
+                            pointBackgroundColor: "#a9c6ea",
+                            pointBorderColor: "#1e5398",
+                            pointHoverBackgroundColor: "#a9c6ea",
+                            pointHoverBorderColor: "#1e5398"
+
+                        }
+                    ]
                 },
 
                 options: {
@@ -233,9 +228,9 @@ var UIController = (function () {
                         }]
                     }
                 }
-                
 
-              });
+
+            });
         }
     };
 })();
@@ -260,56 +255,53 @@ var controller = (function (budgetCtrl, UICtrl) {
     }
 
     var ctrlAddItem = function () {
-        var input, newItem, ratePerPayment;
+        var input, mortgagePayment, ratePerPayment;
         //1. Get the field input data
         input = UICtrl.getinput();
-        console.log(input.rapidLabel);
-        console.log(input.payFreq);
-        newItem = budgetCtrl.ltvRatio(input.mtgValue, input.propValue);
-        
-        
+
         if (input.amortPeriod > 0 && !input.rapidLabel) {
             ratePerPayment = budgetCtrl.ratePerPayment(input.interestRate, 2, input.payFreq);
-            newItem = -budgetCtrl.PMT(
+            mortgagePayment = -budgetCtrl.PMT(
                 ratePerPayment,
                 input.amortPeriod * input.payFreq,
                 input.mtgValue,
                 0, 0).toFixed(2);
         }
-        else if (input.rapidLabel && input.payFreq == 26 ) { //Rapid Bi-Weekly
-            //ratePerPayment = //budgetCtrl.ratePerPayment(input.interestRate, 2, input.payFreq);
-            ratePerPayment = (((1+input.interestRate*0.01/2)**(2/12))-1)
+        else if (input.rapidLabel && input.payFreq == 26) { //Rapid Bi-Weekly
+            ratePerPayment = (((1 + input.interestRate * 0.01 / 2) ** (2 / 12)) - 1)
             console.log(ratePerPayment);
-            newItem = -budgetCtrl.PMT(
+            mortgagePayment = -budgetCtrl.PMT(
                 ratePerPayment,
                 input.amortPeriod * 12,
-                input.mtgValue/2,
+                input.mtgValue / 2,
                 0, 0).toFixed(2);
-                ratePerPayment = budgetCtrl.ratePerPayment(input.interestRate, 2, input.payFreq);
+            ratePerPayment = budgetCtrl.ratePerPayment(input.interestRate, 2, input.payFreq);
         }
-        else if (input.rapidLabel && input.payFreq == 52 ) { //Rapid Weekly
-            ratePerPayment = (((1+input.interestRate*0.01/2)**(2/12))-1)
-            console.log(ratePerPayment);
-            newItem = -budgetCtrl.PMT(
+        else if (input.rapidLabel && input.payFreq == 52) { //Rapid Weekly
+            ratePerPayment = (((1 + input.interestRate * 0.01 / 2) ** (2 / 12)) - 1)
+            mortgagePayment = -budgetCtrl.PMT(
                 ratePerPayment,
                 input.amortPeriod * 12,
-                input.mtgValue/4,
+                input.mtgValue / 4,
                 0, 0).toFixed(2);
-                ratePerPayment = budgetCtrl.ratePerPayment(input.interestRate, 2, input.payFreq);
+            ratePerPayment = budgetCtrl.ratePerPayment(input.interestRate, 2, input.payFreq);
         }
         else {
-            newItem = budgetCtrl.interestOnlyPmt(input.interestRate, input.payFreq, input.mtgValue);
+            mortgagePayment = budgetCtrl.interestOnlyPmt(input.interestRate, input.payFreq, input.mtgValue);
         }
-        console.log(newItem);
+
         //3. Add the item to the UI
-        //UICtrl.addLtv(newItem);
-        UICtrl.addPmt(newItem);
+        UICtrl.addPmt(mortgagePayment);
         //Add the cool chart js chart
-        
-        
-        tableData = budgetCtrl.populateAmortTable(newItem, input.amortPeriod, parseFloat(input.payFreq), input.mtgValue,ratePerPayment);
-        UICtrl.addAmortTable(tableData);
-        UICtrl.addChart(tableData.totalPeriods,tableData.balance,tableData.id);
+
+
+
+        if (input.amortPeriod != 0) {
+            //Shouldn't run with interest only payments
+            tableData = budgetCtrl.populateAmortTable(mortgagePayment, input.amortPeriod, parseFloat(input.payFreq), input.mtgValue, ratePerPayment);
+            UICtrl.addAmortTable(tableData);
+            UICtrl.addChart(tableData.totalPeriods, tableData.balance, tableData.id);
+        }
     };
 
     return {
