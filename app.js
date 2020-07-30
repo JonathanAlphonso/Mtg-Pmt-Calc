@@ -59,13 +59,44 @@ var budgetController = (function () {
                     totalPeriods = i;
                     break;
                 }
-
             }
             //Final payment is special, cannot pay past a balance of $0
             amortTable.principal[totalPeriods] = parseFloat(amortTable.principal[totalPeriods]) + parseFloat(amortTable.balance[totalPeriods]);
             amortTable.pmt[totalPeriods] = parseFloat(amortTable.principal[totalPeriods]) + parseFloat(amortTable.interest[totalPeriods]);
             amortTable.balance[totalPeriods] = 0;
             return amortTable;
+        },
+        populateYearlyAmortTable: function (amortTable, amortPeriod, payFreq) {
+            var yearlyAmortTable = {
+                id: [0],
+                pmt: [0],
+                interest: [0],
+                principal: [0],
+                balance: [amortTable.balance[0]],
+                totalPeriods: amortPeriod
+            }
+            for (var i = 1; i <= amortPeriod; i++) {
+                console.log("year"+i);
+                yearlyAmortTable.id[i] = [i],
+                yearlyAmortTable.pmt[i] = 0;
+                yearlyAmortTable.interest[i] = 0;
+                yearlyAmortTable.principal[i] = 0;
+                yearlyAmortTable.balance[i] = 0;
+                for (var j = 0; j < payFreq; j++) {
+                    console.log("year"+i+"interest payment "+j+" "+parseFloat(amortTable.interest[((((i-1)*payFreq))+j+1)]));
+                    yearlyAmortTable.pmt[i] += parseFloat(amortTable.pmt[((((i-1)*payFreq))+j+1)]);
+                    yearlyAmortTable.interest[i] += parseFloat(amortTable.interest[((((i-1)*payFreq))+j+1)]);
+                    yearlyAmortTable.principal[i] += parseFloat(amortTable.principal[((((i-1)*payFreq))+j+1)]);
+                    yearlyAmortTable.balance[i] = parseFloat(amortTable.balance[((((i-1)*payFreq))+j+1)]);
+     
+    
+                }
+
+
+            }
+            console.log(yearlyAmortTable);
+            return yearlyAmortTable;
+
         }
 
     };
@@ -133,6 +164,7 @@ var UIController = (function () {
         },
 
         addAmortTable: function (tableData) {
+            console.log("I get this data: "+tableData.id);
             var html, newHtml, element;
             element = DOMstrings.amortTable;
             html = '';
@@ -145,7 +177,7 @@ var UIController = (function () {
                 <table class="amortizationSchedule" id="big_amortization_table" style="margin:auto">
                     <thead>
                         <tr>
-                            <th class="ng-binding">Payment #</th>
+                            <th class="ng-binding">Year #</th>
                             <th>Payment</th>
                             <th>Interest (I)</th>
                             <th>Principal (P)</th>
@@ -155,6 +187,7 @@ var UIController = (function () {
                 <tbody>
                         `;
             for (var i = 1; i <= (tableData.id.length - 1); i++) {
+                console.log(tableData.id[i]);
                 html += `
                         <tr>
                             <td>${tableData.id[i]}</td>
@@ -299,8 +332,12 @@ var controller = (function (budgetCtrl, UICtrl) {
         if (input.amortPeriod != 0) {
             //Shouldn't run with interest only payments
             tableData = budgetCtrl.populateAmortTable(mortgagePayment, input.amortPeriod, parseFloat(input.payFreq), input.mtgValue, ratePerPayment);
-            UICtrl.addAmortTable(tableData);
-            UICtrl.addChart(tableData.totalPeriods, tableData.balance, tableData.id);
+            yearlyTableData = budgetCtrl.populateYearlyAmortTable(tableData, input.amortPeriod, parseFloat(input.payFreq));
+            //UICtrl.addAmortTable(tableData);
+            //console.log(yearlyTableData);
+            //UICtrl.addChart(tableData.totalPeriods, tableData.balance, tableData.id);
+            UICtrl.addAmortTable(yearlyTableData);
+            UICtrl.addChart(yearlyTableData.totalPeriods, yearlyTableData.balance, yearlyTableData.id);
         }
     };
 
