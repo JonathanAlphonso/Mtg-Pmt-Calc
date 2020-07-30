@@ -29,6 +29,21 @@ var budgetController = (function () {
             return pmt;
         },
 
+        sum: function (input) {
+            if (toString.call(input) !== "[object Array]") {
+                return false;
+            }
+
+            var total = 0;
+            for (var i = 0; i < input.length; i++) {
+                if (isNaN(input[i])) {
+                    continue;
+                }
+                total += Number(input[i]);
+            }
+            return total;
+        },
+
         //For mortgages where only interest is paid. Not amortized.
         interestOnlyPmt: function (ir, np, pv) {
             return (pv * ir * 0.01 / np).toFixed(2);
@@ -76,20 +91,20 @@ var budgetController = (function () {
                 totalPeriods: amortPeriod
             }
             for (var i = 1; i <= amortPeriod; i++) {
-                console.log("year"+i);
+                console.log("year" + i);
                 yearlyAmortTable.id[i] = [i],
-                yearlyAmortTable.pmt[i] = 0;
+                    yearlyAmortTable.pmt[i] = 0;
                 yearlyAmortTable.interest[i] = 0;
                 yearlyAmortTable.principal[i] = 0;
                 yearlyAmortTable.balance[i] = 0;
                 for (var j = 0; j < payFreq; j++) {
-                    console.log("year"+i+"interest payment "+j+" "+parseFloat(amortTable.interest[((((i-1)*payFreq))+j+1)]));
-                    yearlyAmortTable.pmt[i] += parseFloat(amortTable.pmt[((((i-1)*payFreq))+j+1)]);
-                    yearlyAmortTable.interest[i] += parseFloat(amortTable.interest[((((i-1)*payFreq))+j+1)]);
-                    yearlyAmortTable.principal[i] += parseFloat(amortTable.principal[((((i-1)*payFreq))+j+1)]);
-                    yearlyAmortTable.balance[i] = parseFloat(amortTable.balance[((((i-1)*payFreq))+j+1)]);
-     
-    
+                    console.log("year" + i + "interest payment " + j + " " + parseFloat(amortTable.interest[((((i - 1) * payFreq)) + j + 1)]));
+                    yearlyAmortTable.pmt[i] += parseFloat(amortTable.pmt[((((i - 1) * payFreq)) + j + 1)]);
+                    yearlyAmortTable.interest[i] += parseFloat(amortTable.interest[((((i - 1) * payFreq)) + j + 1)]);
+                    yearlyAmortTable.principal[i] += parseFloat(amortTable.principal[((((i - 1) * payFreq)) + j + 1)]);
+                    yearlyAmortTable.balance[i] = parseFloat(amortTable.balance[((((i - 1) * payFreq)) + j + 1)]);
+
+
                 }
 
 
@@ -144,12 +159,14 @@ var UIController = (function () {
                 //Check for interest only payments first
                 if (document.querySelector(DOMstrings.inputAmort).value != 0) {
                     document.querySelector('#mortgageBalanceChart').setAttribute('style', 'display:flex;');
+                    document.querySelector('#interestPrincipalChart').setAttribute('style', 'display:flex;');
                 }
                 else {
                     document.querySelector('#mortgageBalanceChart').setAttribute('style', 'display:none;');
                     if (document.querySelector('#big_amortization_table')) {
                         //Only hide table if it is on the page
-                        document.querySelector('#big_amortization_table').setAttribute('style', 'display:none;')
+                        document.querySelector('#big_amortization_table').setAttribute('style', 'display:none;');
+                        document.querySelector('#interestPrincipalChart').setAttribute('style', 'display:none;');
                     }
                 }
 
@@ -157,14 +174,14 @@ var UIController = (function () {
             }
             else {
                 newEl.setAttribute('class', 'LTV-Calc-Results');
-                document.querySelector('#mortgageBalanceChart').setAttribute('style', 'display:none;')
+                
                 newEl.innerHTML = 'Your numbers are not valid. Please check your inputs and try again.';
             }
             el.parentNode.replaceChild(newEl, el);
         },
 
         addAmortTable: function (tableData) {
-            console.log("I get this data: "+tableData.id);
+            console.log("I get this data: " + tableData.id);
             var html, newHtml, element;
             element = DOMstrings.amortTable;
             html = '';
@@ -174,8 +191,9 @@ var UIController = (function () {
 
 
             html = `
-            <div class="accordion accordion-light" id="accordion">
-																		<div class="card card-default">
+        <div id="big_amortization_table">
+            <div class="accordion accordion-light amortizationScheduleCard" id="accordion">
+				<div class="card card-default">
 							<div class="card-header">
 								<h4 class="card-title m-0">
 									<a class="accordion-toggle collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapse0One" aria-expanded="false">
@@ -184,45 +202,40 @@ var UIController = (function () {
 								</h4>
 							</div>
 							<div id="collapse0One" class="collapse" data-parent="#accordion" style="">
-                                <div class="card-body">
-                                
-
-                <table class="amortizationSchedule" id="big_amortization_table" style="margin:auto">
-                    <thead>
-                        <tr>
-                            <th class="ng-binding">Year #</th>
-                            <th>Payment</th>
-                            <th>Interest (I)</th>
-                            <th>Principal (P)</th>
-                            <th>Closing balance</th>
-                        </tr>
-                    </thead>
-                <tbody>
+                                <div class="card-body"> 
+                                    <table class="amortizationSchedule"  style="margin:auto">
+                                        <thead>
+                                            <tr>
+                                                <th class="ng-binding">Year #</th>
+                                                <th>Payment</th>
+                                                <th>Interest (I)</th>
+                                                <th>Principal (P)</th>
+                                                <th>Closing balance</th>
+                                            </tr>
+                                        </thead>
+                                    <tbody>
                         `;
             for (var i = 1; i <= (tableData.id.length - 1); i++) {
                 console.log(tableData.id[i]);
                 html += `
-                        <tr>
-                            <td>${tableData.id[i]}</td>
-                            <td>$${tableData.pmt[i].toLocaleString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td> 
-                            <td>$${tableData.interest[i].toLocaleString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td>
-                            <td>$${tableData.principal[i].toLocaleString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td>
-                            <td>$${tableData.balance[i].toLocaleString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td>
-                        </tr>   
+                                    <tr>
+                                        <td>${tableData.id[i]}</td>
+                                        <td>$${tableData.pmt[i].toLocaleString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td> 
+                                        <td>$${tableData.interest[i].toLocaleString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td>
+                                        <td>$${tableData.principal[i].toLocaleString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td>
+                                        <td>$${tableData.balance[i].toLocaleString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</td>
+                                    </tr>   
                         `
             }
             html +=
                 `
-                </tbody>
-                </table>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-							</div>
-						</div>
-																		
-																		
-																		
-																		
-																	</div>
+            </div>
+        </div>
                 `
             newEl.innerHTML = html;
             el.parentNode.replaceChild(newEl, el);
@@ -234,10 +247,11 @@ var UIController = (function () {
             return DOMstrings;
         },
 
-        addChart: function (numOfPayment, balance, num) {
+        addPaymentChart: function (numOfPayment, balance, num) {
 
             var ctx = document.getElementById("mortgageBalanceChart");
-
+            console.log(lineChart);
+            //lineChart.destroy();
             var lineChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -248,7 +262,6 @@ var UIController = (function () {
                             data: [...balance],
                             fill: true,
                             borderColor: "#1e5398",
-
                             backgroundColor: "#a9c6ea",
                             pointBackgroundColor: "#a9c6ea",
                             pointBorderColor: "#1e5398",
@@ -280,6 +293,48 @@ var UIController = (function () {
                                 labelString: 'Remaining Mortgage Principal'
                             }
                         }]
+                    }
+                }
+
+
+            });
+        },
+        addInterestPrincipalChart: function (interest, principal) {
+            console.log("addint the pie");
+            var ctx = document.getElementById("interestPrincipalChart");
+
+            var lineChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Interest','Principal'],
+                    datasets: [
+                        {
+                            label: "Mortgage Balance",
+                            data: [interest,principal],
+                            backgroundColor: [
+                                "#ffcccb",
+                                "#a9c6ea"
+                                
+                            ]
+
+                        }
+                    ]
+                },
+
+                options: {
+                    responsive: true,
+                    title: {
+                        display: true,
+                        text: 'Total Interest vs Principal Payments'
+                    },
+                    tooltips: {
+                        enabled: true,
+                        mode: 'single',
+                        callbacks: {
+                            label: function(tooltipItems, data) {
+                              return '$' + data.datasets[0].data[tooltipItems.index];
+                            }
+                          }
                     }
                 }
 
@@ -356,9 +411,15 @@ var controller = (function (budgetCtrl, UICtrl) {
             yearlyTableData = budgetCtrl.populateYearlyAmortTable(tableData, input.amortPeriod, parseFloat(input.payFreq));
             //UICtrl.addAmortTable(tableData);
             //console.log(yearlyTableData);
-            //UICtrl.addChart(tableData.totalPeriods, tableData.balance, tableData.id);
+
+            console.log(budgetCtrl.sum(tableData.interest));
+            console.log(budgetCtrl.sum(yearlyTableData.interest)); //best
+
+
+            //UICtrl.addPaymentChart(tableData.totalPeriods, tableData.balance, tableData.id);
             UICtrl.addAmortTable(yearlyTableData);
-            UICtrl.addChart(yearlyTableData.totalPeriods, yearlyTableData.balance, yearlyTableData.id);
+            UICtrl.addPaymentChart(yearlyTableData.totalPeriods, yearlyTableData.balance, yearlyTableData.id);
+            UICtrl.addInterestPrincipalChart(budgetCtrl.sum(yearlyTableData.interest).toFixed(2),budgetCtrl.sum(yearlyTableData.principal).toFixed(2));
         }
     };
 
