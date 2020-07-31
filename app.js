@@ -92,28 +92,24 @@ var budgetController = (function () {
             }
             for (var i = 1; i <= amortPeriod; i++) {
                 console.log("year" + i);
+                if (!amortTable.pmt[((((i - 1) * payFreq)))]){break;}
                 yearlyAmortTable.id[i] = [i],
-                    yearlyAmortTable.pmt[i] = 0;
+                yearlyAmortTable.pmt[i] = 0;
                 yearlyAmortTable.interest[i] = 0;
                 yearlyAmortTable.principal[i] = 0;
                 yearlyAmortTable.balance[i] = 0;
                 for (var j = 0; j < payFreq; j++) {
+                    if (!amortTable.pmt[((((i - 1) * payFreq)) + j + 1)]){break;}
                     console.log("year" + i + "interest payment " + j + " " + parseFloat(amortTable.interest[((((i - 1) * payFreq)) + j + 1)]));
                     yearlyAmortTable.pmt[i] += parseFloat(amortTable.pmt[((((i - 1) * payFreq)) + j + 1)]);
                     yearlyAmortTable.interest[i] += parseFloat(amortTable.interest[((((i - 1) * payFreq)) + j + 1)]);
                     yearlyAmortTable.principal[i] += parseFloat(amortTable.principal[((((i - 1) * payFreq)) + j + 1)]);
                     yearlyAmortTable.balance[i] = parseFloat(amortTable.balance[((((i - 1) * payFreq)) + j + 1)]);
-
-
                 }
-
-
             }
             console.log(yearlyAmortTable);
             return yearlyAmortTable;
-
         }
-
     };
 })();
 
