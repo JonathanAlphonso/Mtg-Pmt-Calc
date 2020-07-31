@@ -91,7 +91,7 @@ var budgetController = (function () {
                 totalPeriods: amortPeriod
             }
             for (var i = 1; i <= amortPeriod; i++) {
-                console.log("year" + i);
+  
                 if (!amortTable.pmt[((((i - 1) * payFreq)))]){break;}
                 yearlyAmortTable.id[i] = [i],
                 yearlyAmortTable.pmt[i] = 0;
@@ -100,14 +100,14 @@ var budgetController = (function () {
                 yearlyAmortTable.balance[i] = 0;
                 for (var j = 0; j < payFreq; j++) {
                     if (!amortTable.pmt[((((i - 1) * payFreq)) + j + 1)]){break;}
-                    console.log("year" + i + "interest payment " + j + " " + parseFloat(amortTable.interest[((((i - 1) * payFreq)) + j + 1)]));
+
                     yearlyAmortTable.pmt[i] += parseFloat(amortTable.pmt[((((i - 1) * payFreq)) + j + 1)]);
                     yearlyAmortTable.interest[i] += parseFloat(amortTable.interest[((((i - 1) * payFreq)) + j + 1)]);
                     yearlyAmortTable.principal[i] += parseFloat(amortTable.principal[((((i - 1) * payFreq)) + j + 1)]);
                     yearlyAmortTable.balance[i] = parseFloat(amortTable.balance[((((i - 1) * payFreq)) + j + 1)]);
                 }
             }
-            console.log(yearlyAmortTable);
+
             return yearlyAmortTable;
         }
     };
@@ -126,10 +126,14 @@ var UIController = (function () {
         calcResults: '.LTV-Calc-Results',
         amortTable: '.Mortgage-Amort-Table'
     };
+    
 
     return {
+        //Keep more basic functions at the top
+        getDOMstrings: function () {
+            return DOMstrings;
+        },
         getinput: function () {
-
             return {
                 //Convert from string with commas to number
                 mtgValue: (parseFloat(document.querySelector(DOMstrings.inputDebt).value.replace(/(?!\.)\D/g, ''))),
@@ -140,8 +144,19 @@ var UIController = (function () {
                 rapidLabel: document.querySelector(DOMstrings.inputPayFreq).options[document.querySelector(DOMstrings.inputPayFreq).selectedIndex].innerHTML.includes("Rapid")
 
             };
-
-
+        },
+         addElement: function(parentId, elementTag, elementId, html) {
+            // Adds an element to the document
+            var p = document.getElementById(parentId);
+            var newElement = document.createElement(elementTag);
+            newElement.setAttribute('id', elementId);
+            newElement.innerHTML = html;
+            p.appendChild(newElement);
+        },
+        removeElement: function (elementId) {
+            // Removes an element from the document
+            var element = document.getElementById(elementId);
+            element.parentNode.removeChild(element);
         },
         addPmt: function (pmt) {
             var html, newHtml, element;
@@ -154,15 +169,16 @@ var UIController = (function () {
                 newEl.innerHTML = `Your Payment is <strong>$ ${pmt.toLocaleString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}</strong>`;
                 //Check for interest only payments first
                 if (document.querySelector(DOMstrings.inputAmort).value != 0) {
-                    document.querySelector('#mortgageBalanceChart').setAttribute('style', 'display:flex;');
-                    document.querySelector('#interestPrincipalChart').setAttribute('style', 'display:flex;');
+                    //For amortized mortgages, show graphics
+                    document.querySelector('#Mortgage-Payment-Graphics').setAttribute('style', 'display:contents;');
+                   // document.querySelector('#interestPrincipalChart').setAttribute('style', 'display:flex;');
                 }
                 else {
-                    document.querySelector('#mortgageBalanceChart').setAttribute('style', 'display:none;');
-                    if (document.querySelector('#big_amortization_table')) {
+                    //document.querySelector('#mortgageBalanceChart').setAttribute('style', 'display:none;');
+                    if (document.querySelector('#Mortgage-Payment-Graphics')) {
                         //Only hide table if it is on the page
-                        document.querySelector('#big_amortization_table').setAttribute('style', 'display:none;');
-                        document.querySelector('#interestPrincipalChart').setAttribute('style', 'display:none;');
+                        document.querySelector('#Mortgage-Payment-Graphics').setAttribute('style', 'display:none;');
+                        //document.querySelector('#interestPrincipalChart').setAttribute('style', 'display:none;');
                     }
                 }
 
@@ -177,7 +193,7 @@ var UIController = (function () {
         },
 
         addAmortTable: function (tableData) {
-            console.log("I get this data: " + tableData.id);
+ 
             var html, newHtml, element;
             element = DOMstrings.amortTable;
             html = '';
@@ -212,7 +228,6 @@ var UIController = (function () {
                                     <tbody>
                         `;
             for (var i = 1; i <= (tableData.id.length - 1); i++) {
-                console.log(tableData.id[i]);
                 html += `
                                     <tr>
                                         <td>${tableData.id[i]}</td>
@@ -239,15 +254,24 @@ var UIController = (function () {
         },
 
 
-        getDOMstrings: function () {
-            return DOMstrings;
-        },
+
 
         addPaymentChart: function (numOfPayment, balance, num) {
 
+            //first remove then add any existing charts 
+            this.removeElement("mortgageBalanceChart");
+            this.addElement("Mortgage-Balance-Chart-Parent","canvas","mortgageBalanceChart")
+
             var ctx = document.getElementById("mortgageBalanceChart");
-            console.log(lineChart);
             //lineChart.destroy();
+            
+            var pre = 'Year ';
+            var arr = num;
+            var newArr = (pre + arr.join(';' + pre)).split(';');
+ 
+            num = newArr;
+
+
             var lineChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -277,6 +301,7 @@ var UIController = (function () {
                     scales: {
                         xAxes: [{
                             display: true,
+                            label: 'Year Number',
                             scaleLabel: {
                                 display: true,
                                 labelString: 'Year Number'
@@ -287,8 +312,23 @@ var UIController = (function () {
                             scaleLabel: {
                                 display: true,
                                 labelString: 'Remaining Mortgage Principal'
+                            },
+                            ticks: {
+                                // Include a dollar sign in the ticks
+                                callback: function(value, index, values) {
+                                    return '$' + value;
+                                }
                             }
                         }]
+                    },
+                    tooltips: {
+                        enabled: true,
+                        mode: 'index',
+                        callbacks: {
+                            label: function(tooltipItems, data) {
+                              return '$' + tooltipItems.yLabel;
+                            }
+                          }
                     }
                 }
 
@@ -296,7 +336,12 @@ var UIController = (function () {
             });
         },
         addInterestPrincipalChart: function (interest, principal) {
-            console.log("addint the pie");
+            
+            
+            //first remove then add any existing charts 
+            this.removeElement("interestPrincipalChart");
+            this.addElement("Interest-Principal-Chart-Parent","canvas","interestPrincipalChart")
+
             var ctx = document.getElementById("interestPrincipalChart");
 
             var lineChart = new Chart(ctx, {
@@ -374,7 +419,6 @@ var controller = (function (budgetCtrl, UICtrl) {
         }
         else if (input.rapidLabel && input.payFreq == 26) { //Rapid Bi-Weekly
             ratePerPayment = (((1 + input.interestRate * 0.01 / 2) ** (2 / 12)) - 1)
-            console.log(ratePerPayment);
             mortgagePayment = -budgetCtrl.PMT(
                 ratePerPayment,
                 input.amortPeriod * 12,
@@ -406,10 +450,9 @@ var controller = (function (budgetCtrl, UICtrl) {
             tableData = budgetCtrl.populateAmortTable(mortgagePayment, input.amortPeriod, parseFloat(input.payFreq), input.mtgValue, ratePerPayment);
             yearlyTableData = budgetCtrl.populateYearlyAmortTable(tableData, input.amortPeriod, parseFloat(input.payFreq));
             //UICtrl.addAmortTable(tableData);
-            //console.log(yearlyTableData);
 
-            console.log(budgetCtrl.sum(tableData.interest));
-            console.log(budgetCtrl.sum(yearlyTableData.interest)); //best
+
+
 
 
             //UICtrl.addPaymentChart(tableData.totalPeriods, tableData.balance, tableData.id);
