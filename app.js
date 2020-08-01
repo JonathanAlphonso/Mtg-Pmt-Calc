@@ -184,7 +184,7 @@ var UIController = (function () {
                 document.querySelector('#Mortgage-Payment-Graphics').setAttribute('style', 'display:none;');
                 newEl.setAttribute('class', 'LTV-Calc-Results');
                 newEl.innerHTML = 'Your numbers are not valid. Please check your inputs and try again.';
-                if (document.querySelector(DOMstrings.inputAmort).value == 0) {
+                if (document.querySelector(DOMstrings.inputAmort).value == 0 && document.querySelector(DOMstrings.inputPayFreq).options[document.querySelector(DOMstrings.inputPayFreq).selectedIndex].innerHTML.includes("Rapid")) {
                     newEl.innerHTML = 'Rapid payment schedules are not valid for interest-only mortgages. Please check your inputs and try again.';
                 }
             }
