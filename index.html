@@ -42,28 +42,31 @@
                     <div class="card-body">
                         <p>TEXT TEXT TEXT </p>
                         <p>Write new stuff here</p>
-                        <p>
-
+                    
+                            <label for="add__debt_value">Mortgage Amount</label>
                         <div class="input-group mb-3">
+                         
                             <div class="input-group-prepend">
                                 <span class="input-group-text">$</span>
                             </div>
-                            <input type="text" class="add__debt_value form-control" aria-label="Amount"
+                            
+                            <input type="text" class="add__debt_value form-control" id="add__debt_value" aria-label="Amount"
                                 placeholder="Total of Mortgage Debts">
                         </div>
 
-
+                        <label for="add__interest_rate">Interest Rate</label>
                         <div class="input-group mb-3">
-                            <input type="text" class="add__interest_rate form-control" aria-label="Amount"
+                           
+                            <input type="text" class="add__interest_rate form-control" id="add__interest_rate" aria-label="Amount"
                                 placeholder="Mortgage Interest Rate">
                             <div class="input-group-append">
                                 <span class="input-group-text">%</span>
                             </div>
                         </div>
-
-
+                        <label for="add__interest_rate">Amortization Period</label>
+                       
                         <div class="input-group mb-3">
-                            <select name="add__amort_period" class="add__amort_period form-control" aria-label="Amount"
+                            <select name="add__amort_period" class="add__amort_period form-control" id="add__amort_period" aria-label="Amount"
                                 placeholder="Please select">
                                 <option label="Interest Only" type="number" value="0">Interest Only</option>
                                 <option label="1 year" type="number" value="1">1 year</option>
@@ -99,9 +102,10 @@
                             </select>
 
                         </div>
-
+                        <label for="add__interest_rate">Payment Frequency</label>
                         <div class="input-group mb-3">
-                            <select class="add__payment_freq form-control" name="add__payment_freq"
+                           
+                            <select class="add__payment_freq form-control" id="add__payment_freq" name="add__payment_freq"
                                 id="add__payment_freq" title="Payment Frequency" placeholder="Please select"
                                 required="">
                                 <option label="Weekly" value="52">Weekly</option>
@@ -123,7 +127,10 @@
                             </p>
                             <style>
                                 canvas {
-                                    padding-bottom: 25px;
+                                   margin-bottom: 25px; 
+                                }
+                                label{
+                                    font-size: 16px;
                                 }
                             </style>
                             <div id="Mortgage-Payment-Graphics"  style="display: none;">
